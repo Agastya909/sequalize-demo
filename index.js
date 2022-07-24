@@ -57,13 +57,28 @@ App.get("/recordId/:id", cacheOne, async (req, res) => {
       UniqueID: UID,
     },
   });
-  redis.setex(UID, 60, JSON.stringify(student_data), () => {
-    console.log(`Data saved in cache`);
-  });
+  if (student_data != null) {
+    redis.setex(UID, 60, JSON.stringify(student_data), () => {
+      console.log(`Data saved in cache`);
+    });
+  } else {
+    console.log(`No record for id ${UID}`);
+  }
   return res.json(student_data);
 });
 
 // delete by uniqueId
+
+const deleteFromCache = (id) => {
+  redis.del(id, (error, result) => {
+    if (error) throw error;
+    if (result) {
+      console.log(`Cache with key ${id} deleted`);
+    } else {
+      console.log(`Cannot delete, key not in cache`);
+    }
+  });
+};
 
 App.delete("/record/:id", async (req, res) => {
   try {
@@ -73,7 +88,12 @@ App.delete("/record/:id", async (req, res) => {
         UniqueID: id,
       },
     });
-    res.send("record deleted");
+    if (response) {
+      res.send("record deleted");
+      deleteFromCache(id);
+    } else {
+      res.send(`No data for id ${id}`);
+    }
   } catch (error) {
     res.send(`Error : ${err}`);
   }
@@ -113,6 +133,8 @@ App.patch("/UpdateRecord/:id", async (req, res) => {
     console.log(error);
   }
 });
+
+// Initialize function
 
 const initApp = async () => {
   try {
