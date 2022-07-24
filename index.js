@@ -25,8 +25,6 @@ App.post("/new-record", async (req, res) => {
 
 //Get route
 
-const cacheAll = (req, res, next) => {};
-
 App.get("/all-record", async (req, res, next) => {
   try {
     const student_data = await studentModel.findAll();
@@ -45,7 +43,6 @@ const cacheOne = (req, res, next) => {
     if (error) throw error;
     if (result !== null) {
       console.log(`Data found in cache`);
-      console.log(result);
       return res.json(JSON.parse(result));
     } else {
       return next();
@@ -60,8 +57,7 @@ App.get("/recordId/:id", cacheOne, async (req, res) => {
       UniqueID: UID,
     },
   });
-  // console.log(student_data);
-  redis.setex(UID, 30, JSON.stringify(student_data), () => {
+  redis.setex(UID, 60, JSON.stringify(student_data), () => {
     console.log(`Data saved in cache`);
   });
   return res.json(student_data);
@@ -85,6 +81,21 @@ App.delete("/record/:id", async (req, res) => {
 
 // update name by id
 
+const updateCache = (newData, id) => {
+  redis.get(id, (error, result) => {
+    if (error) throw error;
+    if (result) {
+      let data = JSON.parse(result);
+      data.Name = newData;
+      redis.setex(id, 60, JSON.stringify(data), () => {
+        console.log(`Cache updated`);
+      });
+    } else {
+      console.log(`No data in cache`);
+    }
+  });
+};
+
 App.patch("/UpdateRecord/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -96,6 +107,7 @@ App.patch("/UpdateRecord/:id", async (req, res) => {
       { where: { UniqueID: id } }
     );
     res.send(`User name with ${id} updated`);
+    updateCache(sName, id);
   } catch (error) {
     res.send(`Error :${error}`);
     console.log(error);
