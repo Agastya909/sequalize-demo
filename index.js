@@ -1,5 +1,4 @@
 const express = require("express");
-// const redis = require("redis");
 const Redis = require("ioredis");
 const db = require("./sequalize");
 const studentModel = require("./studentModel");
@@ -7,12 +6,6 @@ const studentModel = require("./studentModel");
 const App = express();
 App.use(express.json());
 const redis = new Redis();
-
-// const redisClient = redis.createClient({ socket: { port: 6379 } });
-// redisClient.connect();
-// redisClient.on("connect", () => {
-//   console.log("redis is connected");
-// });
 
 // Post route
 
@@ -24,8 +17,7 @@ App.post("/new-record", async (req, res) => {
       Age: sAge,
       Email: sEmail,
     });
-    // console.log(response);
-    res.send("New record added successfully");
+    res.send("New record added");
   } catch (error) {
     console.error(`Error : ${error}`);
   }
@@ -53,6 +45,7 @@ const cacheOne = (req, res, next) => {
     if (error) throw error;
     if (result !== null) {
       console.log(`Data found in cache`);
+      console.log(result);
       return res.json(JSON.parse(result));
     } else {
       return next();
@@ -67,7 +60,8 @@ App.get("/recordId/:id", cacheOne, async (req, res) => {
       UniqueID: UID,
     },
   });
-  redis.setex(UID, 10, JSON.stringify(student_data), () => {
+  // console.log(student_data);
+  redis.setex(UID, 30, JSON.stringify(student_data), () => {
     console.log(`Data saved in cache`);
   });
   return res.json(student_data);
@@ -101,7 +95,6 @@ App.patch("/UpdateRecord/:id", async (req, res) => {
       },
       { where: { UniqueID: id } }
     );
-    console.log(response);
     res.send(`User name with ${id} updated`);
   } catch (error) {
     res.send(`Error :${error}`);
