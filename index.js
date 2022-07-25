@@ -4,7 +4,9 @@ const db = require("./sequalize");
 const studentModel = require("./studentModel");
 
 const App = express();
-App.use(express.json());
+// App.use(express.json());
+App.use(express.json({limit: '25mb'}));
+// App.use(express.urlencoded({limit: '25mb'}));
 const redis = new Redis();
 
 // Post route
@@ -58,7 +60,7 @@ App.get("/recordId/:id", cacheOne, async (req, res) => {
     },
   });
   if (student_data != null) {
-    redis.setex(UID, 60, JSON.stringify(student_data), () => {
+    redis.setex(UID, 50, JSON.stringify(student_data), () => {
       console.log(`Data saved in cache`);
     });
   } else {
@@ -107,7 +109,7 @@ const updateCache = (newData, id) => {
     if (result) {
       let data = JSON.parse(result);
       data.Name = newData;
-      redis.setex(id, 60, JSON.stringify(data), () => {
+      redis.setex(id, 50, JSON.stringify(data), () => {
         console.log(`Cache updated`);
       });
     } else {

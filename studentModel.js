@@ -10,13 +10,15 @@ const studentModel = sequelize.define(
       autoIncrement: true,
     },
     Name: {
-      type: DataTypes.STRING,
+      // type: DataTypes.STRING,
+      type: DataTypes.BLOB("medium"),
     },
     Age: {
       type: DataTypes.INTEGER,
     },
     Email: {
-      type: DataTypes.STRING,
+      type: DataTypes.BLOB("medium"),
+      // type: DataTypes.STRING,
     },
   },
   {
