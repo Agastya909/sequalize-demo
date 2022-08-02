@@ -4,9 +4,7 @@ const db = require("./sequalize");
 const studentModel = require("./studentModel");
 
 const App = express();
-// App.use(express.json());
 App.use(express.json({limit: '25mb'}));
-// App.use(express.urlencoded({limit: '25mb'}));
 const redis = new Redis();
 
 // Post route
